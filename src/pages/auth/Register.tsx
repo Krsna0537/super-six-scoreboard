@@ -1,7 +1,8 @@
 
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -9,28 +10,38 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Show a message that Supabase is not connected
-    toast({
-      title: "Supabase Connection Required",
-      description: "Please connect your project to Supabase for authentication features.",
-      duration: 5000,
+    setIsLoading(true);
+
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          first_name: name.split(' ')[0],
+          last_name: name.split(' ').slice(1).join(' '),
+        }
+      }
     });
+
+    if (error) {
+      toast({
+        title: "Registration Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Registration Successful",
+        description: "Please check your email to verify your account.",
+      });
+      navigate('/login');
+    }
     
-    // In a real implementation, we would use Supabase auth
-    // const { error } = await supabase.auth.signUp({ email, password, options: { data: { name } } });
-    // if (error) {
-    //   toast({
-    //     title: "Registration Failed",
-    //     description: error.message,
-    //     variant: "destructive",
-    //   });
-    // } else {
-    //   router.push('/login');
-    // }
+    setIsLoading(false);
   };
 
   return (
