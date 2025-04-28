@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 
@@ -23,11 +22,11 @@ const HeroSection = () => {
               </Link>
             </div>
           </div>
-          <div className="hidden md:block">
-            <img 
-              src="https://placehold.co/600x400/10B981/FFFFFF?text=Cricket+Cloud" 
-              alt="Cricket Tournament Management"
-              className="rounded-lg shadow-xl animate-scale-in"
+          <div className="hidden md:flex justify-center items-center rounded-lg shadow-xl animate-scale-in h-[400px]">
+            <img
+              src="/cricket-65.png"
+              alt="Cricket Equipment"
+              className="max-h-[90%] max-w-[90%] object-contain"
             />
           </div>
         </div>

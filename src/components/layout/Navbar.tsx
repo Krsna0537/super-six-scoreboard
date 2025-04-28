@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
@@ -17,11 +16,16 @@ const Navbar = () => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
               <img
-                src="https://placehold.co/40x40/0EA5E9/FFFFFF?text=CC"
-                alt="Cricket Cloud Logo"
+                src="/rcb-seeklogo.png"
+                alt="RCB Logo"
                 className="h-10 w-10"
               />
-              <span className="ml-2 text-xl font-bold text-cricket-darkblue">CricketCloud</span>
+              <span
+                className="ml-2 font-extrabold text-3xl tracking-tight bg-gradient-to-r from-cricket-blue to-cricket-green bg-clip-text text-transparent drop-shadow-lg"
+                style={{ fontFamily: 'Montserrat, Segoe UI, Arial, sans-serif', letterSpacing: '-0.01em' }}
+              >
+                Cric 18
+              </span>
             </Link>
           </div>
           

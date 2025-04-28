@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -50,8 +49,8 @@ const Register = () => {
         <div>
           <div className="flex justify-center">
             <img
-              src="https://placehold.co/100x100/0EA5E9/FFFFFF?text=CC"
-              alt="CricketCloud Logo"
+              src="/rcb-seeklogo.png"
+              alt="RCB Logo"
               className="h-16 w-16"
             />
           </div>
