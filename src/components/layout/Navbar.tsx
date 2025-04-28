@@ -2,9 +2,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
+import { useAuthContext } from '@/contexts/AuthProvider';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user } = useAuthContext();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -30,10 +32,15 @@ const Navbar = () => {
             <Link to="/matches" className="px-3 py-2 text-gray-700 rounded hover:bg-gray-100">Matches</Link>
             <Link to="/teams" className="px-3 py-2 text-gray-700 rounded hover:bg-gray-100">Teams</Link>
             <Link to="/players" className="px-3 py-2 text-gray-700 rounded hover:bg-gray-100">Players</Link>
-            <Link to="/rankings" className="px-3 py-2 text-gray-700 rounded hover:bg-gray-100">Rankings</Link>
-            <Link to="/login" className="ml-4 px-4 py-2 cricket-button-primary">
-              Sign In
-            </Link>
+            {user ? (
+              <Link to="/profile" className="ml-4 px-4 py-2 cricket-button-primary">
+                Profile
+              </Link>
+            ) : (
+              <Link to="/login" className="ml-4 px-4 py-2 cricket-button-primary">
+                Sign In
+              </Link>
+            )}
           </div>
           
           {/* Mobile menu button */}
@@ -56,10 +63,15 @@ const Navbar = () => {
               <Link to="/matches" className="block px-3 py-2 text-gray-700 rounded hover:bg-gray-100" onClick={toggleMenu}>Matches</Link>
               <Link to="/teams" className="block px-3 py-2 text-gray-700 rounded hover:bg-gray-100" onClick={toggleMenu}>Teams</Link>
               <Link to="/players" className="block px-3 py-2 text-gray-700 rounded hover:bg-gray-100" onClick={toggleMenu}>Players</Link>
-              <Link to="/rankings" className="block px-3 py-2 text-gray-700 rounded hover:bg-gray-100" onClick={toggleMenu}>Rankings</Link>
-              <Link to="/login" className="block px-3 py-2 cricket-button-primary" onClick={toggleMenu}>
-                Sign In
-              </Link>
+              {user ? (
+                <Link to="/profile" className="block px-3 py-2 cricket-button-primary" onClick={toggleMenu}>
+                  Profile
+                </Link>
+              ) : (
+                <Link to="/login" className="block px-3 py-2 cricket-button-primary" onClick={toggleMenu}>
+                  Sign In
+                </Link>
+              )}
             </div>
           </div>
         )}

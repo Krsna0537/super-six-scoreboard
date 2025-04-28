@@ -14,6 +14,8 @@ import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import NotFound from "./pages/NotFound";
 import MainLayout from "./components/layout/MainLayout";
+import Teams from "./pages/Teams";
+import Players from "./pages/Players";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +33,8 @@ const App = () => (
               <Route path="/tournaments/:id" element={<TournamentDetail />} />
               <Route path="/matches" element={<Matches />} />
               <Route path="/matches/:id/live" element={<LiveScoring />} />
+              <Route path="/teams" element={<Teams />} />
+              <Route path="/players" element={<Players />} />
             </Route>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
