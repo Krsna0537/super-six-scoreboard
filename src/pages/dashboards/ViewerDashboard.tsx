@@ -41,13 +41,13 @@ const ViewerDashboard = () => {
     queryKey: ['recent-notifications'],
     queryFn: async () => {
       // Use the edge function to get notifications
-      const response = await supabase.functions.invoke('get_notifications_with_matches', {
+      const { data, error } = await supabase.functions.invoke('get_notifications_with_matches', {
         method: 'GET'
       });
       
-      if (response.error) throw response.error;
+      if (error) throw error;
       // We'll limit the notifications on the client side
-      return (response.data as Notification[]).slice(0, 10);
+      return (data as Notification[]).slice(0, 10);
     },
     refetchInterval: 10000, // Refetch every 10 seconds
   });

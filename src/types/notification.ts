@@ -6,6 +6,7 @@ export interface Notification {
   type: string;
   created_at: string;
   matches?: {
+    id: string;
     team1: {
       name: string;
     };

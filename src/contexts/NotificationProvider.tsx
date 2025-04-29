@@ -25,16 +25,16 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
     const fetchNotifications = async () => {
       try {
-        // Using fetch to call the edge function directly
-        const response = await supabase.functions.invoke('get_notifications_with_matches', {
-          method: 'GET'
+        // Using the edge function
+        const { data, error } = await supabase.functions.invoke('get_notifications_with_matches', {
+          method: 'GET',
         });
         
-        if (response.error) {
-          console.error('Error fetching notifications:', response.error);
-        } else if (response.data) {
-          setNotifications(response.data as Notification[]);
-          setUnreadCount(response.data.length || 0); // Simple implementation - all are unread initially
+        if (error) {
+          console.error('Error fetching notifications:', error);
+        } else if (data) {
+          setNotifications(data as Notification[]);
+          setUnreadCount((data as Notification[]).length || 0); // Simple implementation - all are unread initially
         }
       } catch (error) {
         console.error('Error fetching notifications:', error);

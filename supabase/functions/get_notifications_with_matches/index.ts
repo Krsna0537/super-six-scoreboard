@@ -41,7 +41,10 @@ serve(async (req) => {
       .order('created_at', { ascending: false })
       .limit(50); // Return a larger set of notifications so client can filter if needed
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching notifications:', error);
+      throw error;
+    }
     
     return new Response(
       JSON.stringify(data),
@@ -53,6 +56,8 @@ serve(async (req) => {
       }
     );
   } catch (error) {
+    console.error('Error in get_notifications_with_matches function:', error);
+    
     return new Response(
       JSON.stringify({ error: error.message }),
       { 

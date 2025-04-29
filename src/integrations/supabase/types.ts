@@ -125,6 +125,38 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          match_id: string
+          message: string
+          type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_id: string
+          message: string
+          type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_id?: string
+          message?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       players: {
         Row: {
           batting_style: string | null
