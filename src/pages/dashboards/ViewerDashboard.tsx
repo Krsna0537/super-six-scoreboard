@@ -6,6 +6,7 @@ import { useAuthContext } from '@/contexts/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Notification } from '@/types/notification';
 
 const ViewerDashboard = () => {
   const { user } = useAuthContext();
@@ -43,17 +44,17 @@ const ViewerDashboard = () => {
         .from('notifications')
         .select(`
           *,
-          matches(
+          matches:match_id(
             id,
-            team1:teams!team1_id(name),
-            team2:teams!team2_id(name)
+            team1:team1_id(name),
+            team2:team2_id(name)
           )
         `)
         .order('created_at', { ascending: false })
         .limit(10);
       
       if (error) throw error;
-      return data;
+      return data as unknown as Notification[];
     },
     refetchInterval: 10000, // Refetch every 10 seconds
   });

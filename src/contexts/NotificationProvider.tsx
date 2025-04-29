@@ -3,14 +3,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthContext } from './AuthProvider';
-
-interface Notification {
-  id: string;
-  match_id: string;
-  message: string;
-  type: string;
-  created_at: string;
-}
+import { Notification } from '@/types/notification';
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -33,14 +26,21 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     const fetchNotifications = async () => {
       const { data, error } = await supabase
         .from('notifications')
-        .select('*')
+        .select(`
+          *,
+          matches:match_id(
+            id,
+            team1:team1_id(name),
+            team2:team2_id(name)
+          )
+        `)
         .order('created_at', { ascending: false })
         .limit(20);
       
       if (error) {
         console.error('Error fetching notifications:', error);
       } else if (data) {
-        setNotifications(data);
+        setNotifications(data as unknown as Notification[]);
         setUnreadCount(data.length); // Simple implementation - all are unread initially
       }
     };
