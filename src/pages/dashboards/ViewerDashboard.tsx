@@ -40,26 +40,13 @@ const ViewerDashboard = () => {
   const { data: notifications, isLoading: loadingNotifications } = useQuery({
     queryKey: ['recent-notifications'],
     queryFn: async () => {
-      // Use explicit field selection instead of * to help TypeScript
+      // Use the stored procedure for type safety
       const { data, error } = await supabase
-        .from('notifications')
-        .select(`
-          id,
-          match_id,
-          message,
-          type,
-          created_at,
-          matches:match_id(
-            id,
-            team1:team1_id(name),
-            team2:team2_id(name)
-          )
-        `)
-        .order('created_at', { ascending: false })
+        .rpc('get_notifications_with_matches')
         .limit(10);
       
       if (error) throw error;
-      return data as unknown as Notification[];
+      return data as Notification[];
     },
     refetchInterval: 10000, // Refetch every 10 seconds
   });

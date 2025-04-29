@@ -24,29 +24,15 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     if (!user) return;
 
     const fetchNotifications = async () => {
-      // Since TypeScript doesn't know about our notifications table yet,
-      // we need to use a different approach to query it
+      // Use raw SQL query with postgrest
       const { data, error } = await supabase
-        .from('notifications')
-        .select(`
-          id,
-          match_id,
-          message,
-          type,
-          created_at,
-          matches:match_id(
-            id,
-            team1:team1_id(name),
-            team2:team2_id(name)
-          )
-        `)
-        .order('created_at', { ascending: false })
+        .rpc('get_notifications_with_matches')
         .limit(20);
       
       if (error) {
         console.error('Error fetching notifications:', error);
       } else if (data) {
-        setNotifications(data as unknown as Notification[]);
+        setNotifications(data as Notification[]);
         setUnreadCount(data.length); // Simple implementation - all are unread initially
       }
     };
