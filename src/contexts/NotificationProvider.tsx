@@ -24,10 +24,16 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     if (!user) return;
 
     const fetchNotifications = async () => {
+      // Since TypeScript doesn't know about our notifications table yet,
+      // we need to use a different approach to query it
       const { data, error } = await supabase
         .from('notifications')
         .select(`
-          *,
+          id,
+          match_id,
+          message,
+          type,
+          created_at,
           matches:match_id(
             id,
             team1:team1_id(name),

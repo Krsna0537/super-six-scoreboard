@@ -40,10 +40,15 @@ const ViewerDashboard = () => {
   const { data: notifications, isLoading: loadingNotifications } = useQuery({
     queryKey: ['recent-notifications'],
     queryFn: async () => {
+      // Use explicit field selection instead of * to help TypeScript
       const { data, error } = await supabase
         .from('notifications')
         .select(`
-          *,
+          id,
+          match_id,
+          message,
+          type,
+          created_at,
           matches:match_id(
             id,
             team1:team1_id(name),
