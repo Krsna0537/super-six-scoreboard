@@ -40,13 +40,14 @@ const ViewerDashboard = () => {
   const { data: notifications, isLoading: loadingNotifications } = useQuery({
     queryKey: ['recent-notifications'],
     queryFn: async () => {
-      // Use the stored procedure for type safety
-      const { data, error } = await supabase
-        .rpc('get_notifications_with_matches')
-        .limit(10);
+      // Use the edge function to get notifications
+      const response = await supabase.functions.invoke('get_notifications_with_matches', {
+        method: 'GET',
+        query: { limit: '10' }
+      });
       
-      if (error) throw error;
-      return data as Notification[];
+      if (response.error) throw response.error;
+      return response.data as Notification[];
     },
     refetchInterval: 10000, // Refetch every 10 seconds
   });

@@ -24,16 +24,20 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
     if (!user) return;
 
     const fetchNotifications = async () => {
-      // Use raw SQL query with postgrest
-      const { data, error } = await supabase
-        .rpc('get_notifications_with_matches')
-        .limit(20);
-      
-      if (error) {
+      try {
+        // Using fetch to call the edge function directly
+        const response = await supabase.functions.invoke('get_notifications_with_matches', {
+          method: 'GET'
+        });
+        
+        if (response.error) {
+          console.error('Error fetching notifications:', response.error);
+        } else if (response.data) {
+          setNotifications(response.data as Notification[]);
+          setUnreadCount(response.data.length || 0); // Simple implementation - all are unread initially
+        }
+      } catch (error) {
         console.error('Error fetching notifications:', error);
-      } else if (data) {
-        setNotifications(data as Notification[]);
-        setUnreadCount(data.length); // Simple implementation - all are unread initially
       }
     };
 
