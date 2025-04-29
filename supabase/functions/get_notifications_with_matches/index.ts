@@ -39,7 +39,7 @@ serve(async (req) => {
         )
       `)
       .order('created_at', { ascending: false })
-      .limit(req.url.includes('limit=') ? parseInt(new URL(req.url).searchParams.get('limit') || '20') : 20);
+      .limit(50); // Return a larger set of notifications so client can filter if needed
     
     if (error) throw error;
     
