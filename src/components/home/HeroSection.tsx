@@ -1,7 +1,11 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuthContext } from '@/contexts/AuthProvider';
 
 const HeroSection = () => {
+  const { user } = useAuthContext();
+  
   return (
     <div className="relative bg-gradient-to-r from-cricket-blue to-cricket-darkblue text-white py-16 md:py-24">
       <div className="cricket-container relative z-10">
@@ -14,9 +18,15 @@ const HeroSection = () => {
               Comprehensive cricket management platform for tournaments, teams, and live scoring.
             </p>
             <div className="flex flex-wrap gap-4">
-              <Link to="/register" className="px-6 py-3 bg-white text-cricket-darkblue font-semibold rounded-md hover:bg-gray-100 transition">
-                Get Started
-              </Link>
+              {user ? (
+                <Link to="/dashboard" className="px-6 py-3 bg-white text-cricket-darkblue font-semibold rounded-md hover:bg-gray-100 transition">
+                  Go to Dashboard
+                </Link>
+              ) : (
+                <Link to="/register" className="px-6 py-3 bg-white text-cricket-darkblue font-semibold rounded-md hover:bg-gray-100 transition">
+                  Get Started
+                </Link>
+              )}
               <Link to="/tournaments" className="px-6 py-3 bg-cricket-green text-white font-semibold rounded-md hover:bg-cricket-green/90 transition">
                 View Tournaments
               </Link>

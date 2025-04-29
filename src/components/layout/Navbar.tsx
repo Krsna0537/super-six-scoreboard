@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
@@ -32,6 +33,9 @@ const Navbar = () => {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-1">
             <Link to="/" className="px-3 py-2 text-gray-700 rounded hover:bg-gray-100">Home</Link>
+            {user && (
+              <Link to="/dashboard" className="px-3 py-2 text-gray-700 rounded hover:bg-gray-100">Dashboard</Link>
+            )}
             <Link to="/tournaments" className="px-3 py-2 text-gray-700 rounded hover:bg-gray-100">Tournaments</Link>
             <Link to="/matches" className="px-3 py-2 text-gray-700 rounded hover:bg-gray-100">Matches</Link>
             <Link to="/teams" className="px-3 py-2 text-gray-700 rounded hover:bg-gray-100">Teams</Link>
@@ -63,6 +67,9 @@ const Navbar = () => {
           <div className="md:hidden py-4 border-t border-gray-100 animate-fade-in">
             <div className="flex flex-col space-y-2">
               <Link to="/" className="block px-3 py-2 text-gray-700 rounded hover:bg-gray-100" onClick={toggleMenu}>Home</Link>
+              {user && (
+                <Link to="/dashboard" className="block px-3 py-2 text-gray-700 rounded hover:bg-gray-100" onClick={toggleMenu}>Dashboard</Link>
+              )}
               <Link to="/tournaments" className="block px-3 py-2 text-gray-700 rounded hover:bg-gray-100" onClick={toggleMenu}>Tournaments</Link>
               <Link to="/matches" className="block px-3 py-2 text-gray-700 rounded hover:bg-gray-100" onClick={toggleMenu}>Matches</Link>
               <Link to="/teams" className="block px-3 py-2 text-gray-700 rounded hover:bg-gray-100" onClick={toggleMenu}>Teams</Link>
