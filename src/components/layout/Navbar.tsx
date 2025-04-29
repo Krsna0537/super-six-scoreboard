@@ -1,14 +1,35 @@
-
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Menu, X, LogOut } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user } = useAuthContext();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate('/');
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200">
@@ -40,12 +61,22 @@ const Navbar = () => {
             <Link to="/matches" className="px-3 py-2 text-gray-700 rounded hover:bg-gray-100">Matches</Link>
             <Link to="/teams" className="px-3 py-2 text-gray-700 rounded hover:bg-gray-100">Teams</Link>
             <Link to="/players" className="px-3 py-2 text-gray-700 rounded hover:bg-gray-100">Players</Link>
+            
             {user ? (
-              <Link to="/profile" className="ml-4 px-4 py-2 cricket-button-primary">
-                Profile
-              </Link>
+              <div className="flex items-center space-x-2">
+                <Link to="/profile" className="px-4 py-2 cricket-button-primary">
+                  Profile
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="px-4 py-2 cricket-button-secondary flex items-center"
+                >
+                  <LogOut size={18} className="mr-2" />
+                  Logout
+                </button>
+              </div>
             ) : (
-              <Link to="/login" className="ml-4 px-4 py-2 cricket-button-primary">
+              <Link to="/login" className="px-4 py-2 cricket-button-primary">
                 Sign In
               </Link>
             )}
@@ -74,10 +105,23 @@ const Navbar = () => {
               <Link to="/matches" className="block px-3 py-2 text-gray-700 rounded hover:bg-gray-100" onClick={toggleMenu}>Matches</Link>
               <Link to="/teams" className="block px-3 py-2 text-gray-700 rounded hover:bg-gray-100" onClick={toggleMenu}>Teams</Link>
               <Link to="/players" className="block px-3 py-2 text-gray-700 rounded hover:bg-gray-100" onClick={toggleMenu}>Players</Link>
+              
               {user ? (
-                <Link to="/profile" className="block px-3 py-2 cricket-button-primary" onClick={toggleMenu}>
-                  Profile
-                </Link>
+                <>
+                  <Link to="/profile" className="block px-3 py-2 cricket-button-primary" onClick={toggleMenu}>
+                    Profile
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      toggleMenu();
+                    }}
+                    className="block w-full px-3 py-2 cricket-button-secondary text-left flex items-center"
+                  >
+                    <LogOut size={18} className="mr-2" />
+                    Logout
+                  </button>
+                </>
               ) : (
                 <Link to="/login" className="block px-3 py-2 cricket-button-primary" onClick={toggleMenu}>
                   Sign In

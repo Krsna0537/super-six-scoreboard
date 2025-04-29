@@ -1,5 +1,33 @@
+# Project configuration
+project_id = "super-six-scoreboard"
+api_url = "https://cgkafftlrnldvtrbrjcb.supabase.co"
+anon_key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNna2FmZnRscm5sZHZ0cmJyamNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU4NTY0MTIsImV4cCI6MjA2MTQzMjQxMn0.l6wEJdBIu_LLkRpIiqLcmjz_dC4VkG1EU1_2PL994z0"
+service_role_key = "your-service-role-key-here" # Replace with your actual service role key
 
-project_id = "cgkafftlrnldvtrbrjcb"
+# Database configuration
+[db]
+port = 5432
+major_version = 15
+
+# Auth configuration
+[auth]
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["https://your-production-domain.com"]
+jwt_expiry = 3600
+enable_signup = true
+
+# Storage configuration
+[storage]
+file_size_limit = 52428800 # 50MB
+file_upload_limit = 100
+
+# Functions configuration
+[functions]
+verify_jwt = true
+
+# Edge Functions configuration
+[edge_functions]
+verify_jwt = true
 
 [api]
 enabled = true
@@ -7,11 +35,6 @@ port = 54321
 schemas = ["public", "storage"]
 extra_search_path = ["public", "extensions"]
 max_rows = 1000
-
-[db]
-port = 54322
-shadow_port = 54320
-major_version = 15
 
 [realtime]
 enabled = true
@@ -24,13 +47,6 @@ api_url = "http://localhost"
 [inbucket]
 enabled = true
 port = 54324
-
-[storage]
-enabled = true
-
-[auth]
-enabled = true
-site_url = "http://localhost:3000"
 
 [analytics]
 enabled = false
