@@ -37,3 +37,6 @@ enabled = false
 
 [functions.get_notifications_with_matches]
 verify_jwt = true
+
+[functions.create_admin_user]
+verify_jwt = false
