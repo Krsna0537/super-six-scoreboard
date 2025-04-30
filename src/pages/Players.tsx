@@ -5,9 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CreatePlayerDialog from "@/components/players/CreatePlayerDialog";
+import useUserRole from "@/hooks/useUserRole";
 
 const Players = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const { isAdmin } = useUserRole();
   
   const { data: players, isLoading, refetch } = useQuery({
     queryKey: ["players"],
@@ -41,13 +43,15 @@ const Players = () => {
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Players</h1>
-        <Button 
-          onClick={() => setIsCreateDialogOpen(true)}
-          className="cricket-button-primary flex items-center gap-2"
-        >
-          <Plus size={18} />
-          Create Player
-        </Button>
+        {isAdmin && (
+          <Button 
+            onClick={() => setIsCreateDialogOpen(true)}
+            className="cricket-button-primary flex items-center gap-2"
+          >
+            <Plus size={18} />
+            Create Player
+          </Button>
+        )}
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -74,11 +78,13 @@ const Players = () => {
         ))}
       </div>
 
-      <CreatePlayerDialog 
-        open={isCreateDialogOpen} 
-        onOpenChange={setIsCreateDialogOpen}
-        onPlayerCreated={handlePlayerCreated}
-      />
+      {isAdmin && (
+        <CreatePlayerDialog 
+          open={isCreateDialogOpen} 
+          onOpenChange={setIsCreateDialogOpen}
+          onPlayerCreated={handlePlayerCreated}
+        />
+      )}
     </div>
   );
 };

@@ -5,9 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CreateTeamDialog from "@/components/teams/CreateTeamDialog";
+import useUserRole from "@/hooks/useUserRole";
+import { useNavigate } from "react-router-dom";
 
 const Teams = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const { isAdmin } = useUserRole();
+  const navigate = useNavigate();
   
   const { data: teams, isLoading, refetch } = useQuery({
     queryKey: ["teams"],
@@ -38,13 +42,15 @@ const Teams = () => {
     <div className="container mx-auto py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Teams</h1>
-        <Button 
-          onClick={() => setIsCreateDialogOpen(true)}
-          className="cricket-button-primary flex items-center gap-2"
-        >
-          <Plus size={18} />
-          Create Team
-        </Button>
+        {isAdmin && (
+          <Button 
+            onClick={() => setIsCreateDialogOpen(true)}
+            className="cricket-button-primary flex items-center gap-2"
+          >
+            <Plus size={18} />
+            Create Team
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -62,11 +68,13 @@ const Teams = () => {
         ))}
       </div>
 
-      <CreateTeamDialog 
-        open={isCreateDialogOpen} 
-        onOpenChange={setIsCreateDialogOpen}
-        onTeamCreated={handleTeamCreated}
-      />
+      {isAdmin && (
+        <CreateTeamDialog 
+          open={isCreateDialogOpen} 
+          onOpenChange={setIsCreateDialogOpen}
+          onTeamCreated={handleTeamCreated}
+        />
+      )}
     </div>
   );
 };

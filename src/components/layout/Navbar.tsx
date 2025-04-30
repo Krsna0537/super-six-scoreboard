@@ -1,13 +1,16 @@
+
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, LogOut } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import useUserRole from '@/hooks/useUserRole';
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user } = useAuthContext();
+  const { isAdmin } = useUserRole();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -64,6 +67,11 @@ const Navbar = () => {
             
             {user ? (
               <div className="flex items-center space-x-2">
+                {isAdmin && (
+                  <span className="px-2 py-1 bg-cricket-blue text-white text-xs rounded-full">
+                    Admin
+                  </span>
+                )}
                 <Link to="/profile" className="px-4 py-2 cricket-button-primary">
                   Profile
                 </Link>
@@ -108,6 +116,11 @@ const Navbar = () => {
               
               {user ? (
                 <>
+                  {isAdmin && (
+                    <span className="px-3 py-1 bg-cricket-blue text-white text-sm rounded-full self-start ml-3">
+                      Admin
+                    </span>
+                  )}
                   <Link to="/profile" className="block px-3 py-2 cricket-button-primary" onClick={toggleMenu}>
                     Profile
                   </Link>
