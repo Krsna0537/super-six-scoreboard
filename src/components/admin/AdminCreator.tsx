@@ -1,8 +1,6 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { createAdminUser } from '@/utils/adminUserCreator';
-import { useToast } from '@/hooks/use-toast';
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -17,32 +15,13 @@ import {
 const AdminCreator = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const { toast } = useToast();
   
   const handleCreateAdmin = async () => {
     setIsCreating(true);
     
     try {
       const result = await createAdminUser();
-      
-      if (result.success) {
-        toast({
-          title: "Success",
-          description: "Admin user created successfully. You can now login with admin@pro2.com and the specified password.",
-        });
-      } else {
-        toast({
-          title: "Error",
-          description: result.error?.message || "Failed to create admin user. See console for details.",
-          variant: "destructive",
-        });
-      }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. See console for details.",
-        variant: "destructive",
-      });
       console.error(error);
     } finally {
       setIsCreating(false);

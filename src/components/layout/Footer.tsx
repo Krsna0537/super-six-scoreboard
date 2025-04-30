@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 
@@ -8,7 +7,7 @@ const Footer = () => {
       <div className="cricket-container py-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h4 className="text-lg font-bold mb-4">CricketCloud</h4>
+            <h4 className="text-lg font-bold mb-4">Cric 18</h4>
             <p className="text-sm text-gray-300">
               The ultimate cricket tournament management platform for clubs, leagues, and associations.
             </p>
@@ -60,7 +59,7 @@ const Footer = () => {
         </div>
         
         <div className="mt-8 pt-8 border-t border-gray-700 text-center text-sm text-gray-400">
-          <p>&copy; {new Date().getFullYear()} CricketCloud. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Cric 18. All rights reserved.</p>
         </div>
       </div>
     </footer>

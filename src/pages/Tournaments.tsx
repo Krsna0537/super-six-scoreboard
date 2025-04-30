@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TournamentsList from '@/components/tournaments/TournamentsList';
 import TournamentFilters from '@/components/tournaments/TournamentFilters';
 import { TournamentCardProps } from '@/components/tournaments/TournamentCard';
@@ -7,102 +6,47 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import CreateTournamentDialog from '@/components/tournaments/CreateTournamentDialog';
 import useUserRole from '@/hooks/useUserRole';
-
-// Mock data for tournaments
-const mockTournaments: TournamentCardProps[] = [
-  {
-    id: 1,
-    name: "Premier League 2025",
-    startDate: "May 15, 2025",
-    endDate: "June 30, 2025",
-    location: "Mumbai, India",
-    teams: 12,
-    status: "Upcoming",
-    image: "https://placehold.co/400x225/0EA5E9/FFFFFF?text=Premier+League"
-  },
-  {
-    id: 2,
-    name: "T20 Championship",
-    startDate: "April 10, 2025",
-    endDate: "April 25, 2025",
-    location: "London, UK",
-    teams: 8,
-    status: "Registration Open",
-    image: "https://placehold.co/400x225/10B981/FFFFFF?text=T20+Championship"
-  },
-  {
-    id: 3,
-    name: "Corporate Cup 2025",
-    startDate: "July 5, 2025",
-    endDate: "July 25, 2025",
-    location: "Sydney, Australia",
-    teams: 16,
-    status: "Upcoming",
-    image: "https://placehold.co/400x225/0369A1/FFFFFF?text=Corporate+Cup"
-  },
-  {
-    id: 4,
-    name: "Winter Tournament 2025",
-    startDate: "January 10, 2025",
-    endDate: "February 15, 2025",
-    location: "Auckland, New Zealand",
-    teams: 10,
-    status: "Completed",
-    image: "https://placehold.co/400x225/1F2937/FFFFFF?text=Winter+Tournament"
-  },
-  {
-    id: 5,
-    name: "Summer Series 2024",
-    startDate: "August 1, 2024",
-    endDate: "August 30, 2024",
-    location: "Cape Town, South Africa",
-    teams: 6,
-    status: "Completed",
-    image: "https://placehold.co/400x225/10B981/FFFFFF?text=Summer+Series"
-  },
-  {
-    id: 6,
-    name: "World Championship 2025",
-    startDate: "October 15, 2025",
-    endDate: "November 20, 2025",
-    location: "Melbourne, Australia",
-    teams: 20,
-    status: "Upcoming",
-    image: "https://placehold.co/400x225/0EA5E9/FFFFFF?text=World+Championship"
-  },
-];
+import { supabase } from '@/integrations/supabase/client';
 
 const Tournaments = () => {
-  const [tournaments, setTournaments] = useState<TournamentCardProps[]>(mockTournaments);
+  const [tournaments, setTournaments] = useState<TournamentCardProps[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const { isAdmin } = useUserRole();
 
-  const handleFilter = (filters: any) => {
+  const fetchTournaments = async (filters: any = {}) => {
     setIsLoading(true);
-    
-    // Simulate API call with setTimeout
-    setTimeout(() => {
-      let filteredTournaments = [...mockTournaments];
-      
-      if (filters.status) {
-        filteredTournaments = filteredTournaments.filter(
-          (t) => t.status.toLowerCase() === filters.status
-        );
-      }
-      
-      if (filters.searchTerm) {
-        const searchLower = filters.searchTerm.toLowerCase();
-        filteredTournaments = filteredTournaments.filter(
-          (t) => 
-            t.name.toLowerCase().includes(searchLower) || 
-            t.location.toLowerCase().includes(searchLower)
-        );
-      }
-      
-      setTournaments(filteredTournaments);
-      setIsLoading(false);
-    }, 500);
+    let query = supabase.from('tournaments').select('*');
+    if (filters.status) {
+      query = query.eq('status', filters.status);
+    }
+    if (filters.searchTerm) {
+      query = query.ilike('name', `%${filters.searchTerm}%`);
+    }
+    const { data, error } = await query.order('start_date', { ascending: true });
+    if (!error && data) {
+      setTournaments(
+        data.map((t: any) => ({
+          id: t.id,
+          name: t.name,
+          startDate: t.start_date,
+          endDate: t.end_date,
+          location: t.location,
+          teams: t.teams_count || 0,
+          status: t.status,
+          image: t.image || 'https://placehold.co/400x225/0EA5E9/FFFFFF?text=Tournament',
+        }))
+      );
+    }
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchTournaments();
+  }, []);
+
+  const handleFilter = (filters: any) => {
+    fetchTournaments(filters);
   };
 
   return (
@@ -120,15 +64,13 @@ const Tournaments = () => {
             </Button>
           )}
         </div>
-        
         <TournamentFilters onFilter={handleFilter} />
-        
         <TournamentsList tournaments={tournaments} isLoading={isLoading} />
-
         {isAdmin && (
           <CreateTournamentDialog 
             open={isCreateDialogOpen}
             onOpenChange={setIsCreateDialogOpen}
+            onTournamentCreated={() => fetchTournaments()}
           />
         )}
       </div>

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 const Register = () => {
@@ -8,7 +7,6 @@ const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,16 +25,9 @@ const Register = () => {
     });
 
     if (error) {
-      toast({
-        title: "Registration Failed",
-        description: error.message,
-        variant: "destructive",
-      });
+      // Removed: toast error
     } else {
-      toast({
-        title: "Registration Successful",
-        description: "Please check your email to verify your account.",
-      });
+      // Removed: toast success
       navigate('/login');
     }
     
@@ -49,9 +40,9 @@ const Register = () => {
         <div>
           <div className="flex justify-center">
             <img
-              src="/rcb-seeklogo.png"
-              alt="RCB Logo"
-              className="h-16 w-16"
+              className="mx-auto h-16 w-auto"
+              src="/logo.jpg"
+              alt="CricketCloud"
             />
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">

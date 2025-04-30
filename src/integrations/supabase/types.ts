@@ -270,6 +270,45 @@ export type Database = {
           },
         ]
       }
+      tournament_teams: {
+        Row: {
+          id: string
+          tournament_id: string
+          team_id: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          tournament_id: string
+          team_id: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          tournament_id?: string
+          team_id?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tournament_teams_tournament_id_fkey"
+            columns: ["tournament_id"]
+            isOneToOne: false
+            referencedRelation: "tournaments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tournament_teams_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       tournaments: {
         Row: {
           created_at: string | null
@@ -281,6 +320,8 @@ export type Database = {
           start_date: string
           status: string
           updated_at: string | null
+          image: string | null
+          description: string | null
         }
         Insert: {
           created_at?: string | null
@@ -292,6 +333,8 @@ export type Database = {
           start_date: string
           status?: string
           updated_at?: string | null
+          image?: string | null
+          description?: string | null
         }
         Update: {
           created_at?: string | null
@@ -303,6 +346,8 @@ export type Database = {
           start_date?: string
           status?: string
           updated_at?: string | null
+          image?: string | null
+          description?: string | null
         }
         Relationships: []
       }
@@ -432,3 +477,15 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
+export type Team = {
+  id: string;
+  name: string;
+  logo_url: string | null;
+  description: string | null;
+  captain_id: string | null;
+  vice_captain_id: string | null;
+  wicket_keeper_id: string | null;
+  created_at: string;
+  updated_at: string;
+};

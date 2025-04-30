@@ -1,9 +1,7 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 import {
@@ -42,8 +40,6 @@ const CreateTeamDialog: React.FC<CreateTeamDialogProps> = ({
   onOpenChange,
   onTeamCreated
 }) => {
-  const { toast } = useToast();
-  
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -61,20 +57,11 @@ const CreateTeamDialog: React.FC<CreateTeamDialogProps> = ({
 
       if (error) throw error;
 
-      toast({
-        title: 'Success',
-        description: 'Team created successfully',
-      });
-      
       onOpenChange(false);
       form.reset();
       if (onTeamCreated) onTeamCreated();
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to create team',
-        variant: 'destructive',
-      });
+      // Removed: toast error
     }
   };
 

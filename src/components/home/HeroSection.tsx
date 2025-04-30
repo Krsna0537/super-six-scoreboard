@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuthContext } from '@/contexts/AuthProvider';
+import { Button } from '@/components/ui/button';
 
 const HeroSection = () => {
   const { user } = useAuthContext();
@@ -19,24 +19,24 @@ const HeroSection = () => {
             </p>
             <div className="flex flex-wrap gap-4">
               {user ? (
-                <Link to="/dashboard" className="px-6 py-3 bg-white text-cricket-darkblue font-semibold rounded-md hover:bg-gray-100 transition">
-                  Go to Dashboard
-                </Link>
+                <Button asChild>
+                  <Link to="/dashboard">Go to Dashboard</Link>
+                </Button>
               ) : (
-                <Link to="/register" className="px-6 py-3 bg-white text-cricket-darkblue font-semibold rounded-md hover:bg-gray-100 transition">
-                  Get Started
-                </Link>
+                <Button asChild>
+                  <Link to="/register">Get Started</Link>
+                </Button>
               )}
-              <Link to="/tournaments" className="px-6 py-3 bg-cricket-green text-white font-semibold rounded-md hover:bg-cricket-green/90 transition">
-                View Tournaments
-              </Link>
+              <Button variant="secondary" asChild>
+                <Link to="/tournaments">View Tournaments</Link>
+              </Button>
             </div>
           </div>
-          <div className="hidden md:flex justify-center items-center rounded-lg shadow-xl animate-scale-in h-[400px]">
+          <div className="hidden md:flex justify-center items-center rounded-lg shadow-xl animate-scale-in h-[400px] group">
             <img
-              src="/cricket-65.png"
+              src="/vk1.jpg"
               alt="Cricket Equipment"
-              className="max-h-[90%] max-w-[90%] object-contain"
+              className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-105 group-hover:shadow-2xl"
             />
           </div>
         </div>

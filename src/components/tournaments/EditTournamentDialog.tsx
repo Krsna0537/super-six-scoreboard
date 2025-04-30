@@ -46,71 +46,112 @@ const formSchema = z.object({
   endDate: z.date({ required_error: 'End date is required' }),
   status: z.string().default('upcoming'),
   logo: z.string().url({ message: 'Please enter a valid image URL' }).optional(),
+  description: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface CreateTournamentDialogProps {
+interface EditTournamentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onTournamentCreated?: () => void;
+  tournament: any;
+  onTournamentUpdated?: () => void;
 }
 
-const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({ 
+const EditTournamentDialog: React.FC<EditTournamentDialogProps> = ({ 
   open, 
   onOpenChange, 
-  onTournamentCreated 
+  tournament,
+  onTournamentUpdated 
 }) => {
   const [teamsList, setTeamsList] = useState<{ id: string; name: string }[]>([]);
-  const [logoUploading, setLogoUploading] = useState(false);
+  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
 
   useEffect(() => {
-    if (open) {
+    if (open && tournament) {
+      // Fetch all teams
       supabase.from('teams').select('id, name').then(({ data }) => {
         if (data) setTeamsList(data);
       });
+
+      // Fetch teams already in tournament
+      supabase.from('tournament_teams')
+        .select('team_id')
+        .eq('tournament_id', tournament.id)
+        .then(({ data }) => {
+          if (data) {
+            setSelectedTeams(data.map((item: any) => item.team_id));
+          }
+        });
     }
-  }, [open]);
+  }, [open, tournament]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      location: '',
-      format: 'T20',
-      status: 'upcoming',
-      logo: '',
+      name: tournament?.name || '',
+      location: tournament?.location || '',
+      format: tournament?.format || 'T20',
+      status: tournament?.status || 'upcoming',
+      logo: tournament?.image || '',
+      description: tournament?.description || '',
     },
   });
 
   const onSubmit = async (data: FormValues) => {
     try {
-      const { error } = await supabase.from('tournaments').insert({
-        name: data.name,
-        location: data.location,
-        format: data.format,
-        start_date: data.startDate.toISOString(),
-        end_date: data.endDate.toISOString(),
-        status: data.status,
-        image: data.logo,
-      });
-      if (error) throw error;
+      // Update tournament details
+      const { error: updateError } = await supabase
+        .from('tournaments')
+        .update({
+          name: data.name,
+          location: data.location,
+          format: data.format,
+          start_date: data.startDate.toISOString(),
+          end_date: data.endDate.toISOString(),
+          status: data.status,
+          image: data.logo,
+          description: data.description,
+        })
+        .eq('id', tournament.id);
+
+      if (updateError) throw updateError;
+
+      // Update tournament teams
+      const { error: teamsError } = await supabase
+        .from('tournament_teams')
+        .delete()
+        .eq('tournament_id', tournament.id);
+
+      if (teamsError) throw teamsError;
+
+      // Insert new teams
+      if (selectedTeams.length > 0) {
+        const { error: insertError } = await supabase
+          .from('tournament_teams')
+          .insert(selectedTeams.map(teamId => ({
+            tournament_id: tournament.id,
+            team_id: teamId,
+          })));
+
+        if (insertError) throw insertError;
+      }
+
       onOpenChange(false);
-      form.reset();
-      if (onTournamentCreated) onTournamentCreated();
+      if (onTournamentUpdated) onTournamentUpdated();
     } catch (error: any) {
-      // Removed: toast error
+      console.error('Error updating tournament:', error.message || 'Failed to update tournament');
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle className="text-xl">Create New Tournament</DialogTitle>
+          <DialogTitle className="text-xl">Edit Tournament</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4 overflow-y-auto max-h-[calc(90vh-8rem)]">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -139,6 +180,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                 )}
               />
             </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -187,6 +229,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                 )}
               />
             </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -200,7 +243,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                           <Button
                             variant={"outline"}
                             className={cn(
-                              "pl-3 text-left font-normal",
+                              "w-full pl-3 text-left font-normal",
                               !field.value && "text-muted-foreground"
                             )}
                           >
@@ -218,8 +261,10 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
+                          disabled={(date) =>
+                            date < new Date("1900-01-01")
+                          }
                           initialFocus
-                          className={cn("p-3 pointer-events-auto")}
                         />
                       </PopoverContent>
                     </Popover>
@@ -239,7 +284,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                           <Button
                             variant={"outline"}
                             className={cn(
-                              "pl-3 text-left font-normal",
+                              "w-full pl-3 text-left font-normal",
                               !field.value && "text-muted-foreground"
                             )}
                           >
@@ -257,8 +302,10 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                           mode="single"
                           selected={field.value}
                           onSelect={field.onChange}
+                          disabled={(date) =>
+                            date < new Date("1900-01-01")
+                          }
                           initialFocus
-                          className={cn("p-3 pointer-events-auto")}
                         />
                       </PopoverContent>
                     </Popover>
@@ -267,26 +314,66 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
                 )}
               />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="logo"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Logo URL</FormLabel>
-                    <FormControl>
-                      <Input placeholder="https://example.com/logo.png" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+
+            <FormField
+              control={form.control}
+              name="logo"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Logo URL</FormLabel>
+                  <FormControl>
+                    <Input placeholder="https://example.com/logo.png" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter tournament description" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div>
+              <FormLabel>Teams</FormLabel>
+              <div className="mt-2 space-y-2">
+                {teamsList.map((team) => (
+                  <div key={team.id} className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id={`team-${team.id}`}
+                      checked={selectedTeams.includes(team.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedTeams([...selectedTeams, team.id]);
+                        } else {
+                          setSelectedTeams(selectedTeams.filter(id => id !== team.id));
+                        }
+                      }}
+                      className="h-4 w-4 text-cricket-blue focus:ring-cricket-blue border-gray-300 rounded"
+                    />
+                    <label htmlFor={`team-${team.id}`} className="text-sm">
+                      {team.name}
+                    </label>
+                  </div>
+                ))}
+              </div>
             </div>
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit">Create Tournament</Button>
+              <Button type="submit">Update Tournament</Button>
             </DialogFooter>
           </form>
         </Form>
@@ -295,4 +382,4 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({
   );
 };
 
-export default CreateTournamentDialog;
+export default EditTournamentDialog; 

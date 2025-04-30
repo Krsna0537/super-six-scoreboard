@@ -1,10 +1,8 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, LogOut } from 'lucide-react';
 import { useAuthContext } from '@/contexts/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 import useUserRole from '@/hooks/useUserRole';
 
 const Navbar = () => {
@@ -12,7 +10,6 @@ const Navbar = () => {
   const { user } = useAuthContext();
   const { isAdmin } = useUserRole();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -21,16 +18,8 @@ const Navbar = () => {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       navigate('/');
-      toast({
-        title: "Logged out successfully",
-        description: "You have been logged out of your account.",
-      });
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to log out. Please try again.",
-        variant: "destructive",
-      });
+      // Removed: toast error
     }
   };
 
@@ -41,9 +30,9 @@ const Navbar = () => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
               <img
-                src="/rcb-seeklogo.png"
-                alt="RCB Logo"
-                className="h-10 w-10"
+                className="h-12 w-auto"
+                src="/logo.jpg"
+                alt="CricketCloud"
               />
               <span
                 className="ml-2 font-extrabold text-3xl tracking-tight bg-gradient-to-r from-cricket-blue to-cricket-green bg-clip-text text-transparent drop-shadow-lg"

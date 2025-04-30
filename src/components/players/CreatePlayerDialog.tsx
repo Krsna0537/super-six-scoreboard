@@ -1,272 +1,244 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { useToast } from '@/hooks/use-toast';
+import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
-
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Loader, Plus, Upload } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-const formSchema = z.object({
-  firstName: z.string().min(2, { message: 'First name must be at least 2 characters' }),
-  lastName: z.string().min(2, { message: 'Last name must be at least 2 characters' }),
-  jerseyNumber: z.string().min(1).max(3).regex(/^\d+$/, { message: 'Jersey number must be numeric' }).transform(Number).optional(),
-  teamId: z.string().optional(),
-  battingStyle: z.string().optional(),
-  bowlingStyle: z.string().optional(),
+const playerSchema = z.object({
+  first_name: z.string().min(1, 'First name is required'),
+  last_name: z.string().min(1, 'Last name is required'),
+  player_type: z.enum(['batter', 'bowler', 'all_rounder']),
+  batting_style: z.string().optional(),
+  bowling_style: z.string().optional(),
+  jersey_number: z.string().optional(),
+  image_url: z.string().url('Please enter a valid image URL').optional(),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type PlayerFormData = z.infer<typeof playerSchema>;
 
 interface CreatePlayerDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onPlayerCreated?: () => void;
+  onPlayerCreated: () => void;
 }
 
-const CreatePlayerDialog: React.FC<CreatePlayerDialogProps> = ({ 
-  open, 
-  onOpenChange,
-  onPlayerCreated
-}) => {
-  const { toast } = useToast();
-  
-  const { data: teams, isLoading: isLoadingTeams } = useQuery({
-    queryKey: ["teams-for-select"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("teams").select("id, name").order("name");
-      if (error) throw error;
-      return data;
-    },
-    enabled: open,
-  });
-  
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+const battingStyles = [
+  { value: 'Right-handed', label: 'Right-handed' },
+  { value: 'Left-handed', label: 'Left-handed' },
+];
+
+const bowlingStyles = [
+  { value: 'Right-arm fast', label: 'Right-arm fast' },
+  { value: 'Left-arm fast', label: 'Left-arm fast' },
+  { value: 'Right-arm medium', label: 'Right-arm medium' },
+  { value: 'Left-arm medium', label: 'Left-arm medium' },
+  { value: 'Right-arm off-spin', label: 'Right-arm off-spin' },
+  { value: 'Left-arm orthodox', label: 'Left-arm orthodox' },
+  { value: 'Leg-break', label: 'Leg-break' },
+];
+
+const CreatePlayerDialog: React.FC<CreatePlayerDialogProps> = ({ onPlayerCreated }) => {
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<PlayerFormData>({
+    resolver: zodResolver(playerSchema),
     defaultValues: {
-      firstName: '',
-      lastName: '',
-      battingStyle: '',
-      bowlingStyle: '',
+      player_type: 'batter',
     },
   });
 
-  const onSubmit = async (data: FormValues) => {
+  const playerType = watch('player_type');
+
+  const onSubmit = async (data: PlayerFormData) => {
     try {
-      // First create a profile - Fix: Generate UUID on client side to assign as ID
-      const profileId = crypto.randomUUID();
-      
-      const { data: profileData, error: profileError } = await supabase.from('profiles').insert({
-        id: profileId,
-        first_name: data.firstName,
-        last_name: data.lastName,
-        role: 'player',
-      }).select('id').single();
-      
-      if (profileError) throw profileError;
-      
-      // Then create the player with the profile id
-      const { error: playerError } = await supabase.from('players').insert({
-        profile_id: profileId, // Use the same ID we generated
-        team_id: data.teamId || null,
-        jersey_number: data.jerseyNumber || null,
-        batting_style: data.battingStyle || null,
-        bowling_style: data.bowlingStyle || null,
-      });
-
+      setLoading(true);
+      // Insert directly into players table
+      const { error: playerError } = await supabase
+        .from('players')
+        .insert({
+          first_name: data.first_name,
+          last_name: data.last_name,
+          image_url: imageUrl,
+          batting_style: data.batting_style || null,
+          bowling_style: data.bowling_style || null,
+          jersey_number: data.jersey_number ? parseInt(data.jersey_number) : null,
+          player_type: data.player_type,
+        });
       if (playerError) throw playerError;
-
-      toast({
-        title: 'Success',
-        description: 'Player created successfully',
-      });
-      
-      onOpenChange(false);
-      form.reset();
-      if (onPlayerCreated) onPlayerCreated();
+      reset();
+      setImageUrl(null);
+      setOpen(false);
+      onPlayerCreated();
     } catch (error: any) {
-      toast({
-        title: 'Error',
-        description: error.message || 'Failed to create player',
-        variant: 'destructive',
-      });
+      console.error('Error creating player: ', error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const battingStyles = [
-    { value: 'Right-handed', label: 'Right-handed' },
-    { value: 'Left-handed', label: 'Left-handed' },
-  ];
-
-  const bowlingStyles = [
-    { value: 'Right-arm fast', label: 'Right-arm fast' },
-    { value: 'Left-arm fast', label: 'Left-arm fast' },
-    { value: 'Right-arm medium', label: 'Right-arm medium' },
-    { value: 'Left-arm medium', label: 'Left-arm medium' },
-    { value: 'Right-arm off-spin', label: 'Right-arm off-spin' },
-    { value: 'Left-arm orthodox', label: 'Left-arm orthodox' },
-    { value: 'Leg-break', label: 'Leg-break' },
-  ];
-
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" />
+          Create Player
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle className="text-xl">Create New Player</DialogTitle>
+          <DialogTitle>Create New Player</DialogTitle>
         </DialogHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 pt-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>First Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="John" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Last Name</FormLabel>
-                    <FormControl>
-                      <Input placeholder="Doe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div className="flex flex-col items-center gap-4">
+            <Avatar className="h-24 w-24">
+              <AvatarImage src={imageUrl || undefined} />
+              <AvatarFallback>PL</AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col items-center gap-2 w-full">
+              <Label htmlFor="imageUrl">Image URL</Label>
+              <Input
+                id="imageUrl"
+                type="url"
+                placeholder="https://example.com/avatar.png"
+                value={imageUrl || ''}
+                onChange={e => setImageUrl(e.target.value)}
               />
             </div>
+          </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="teamId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Team (Optional)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select team" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {teams?.map((team) => (
-                          <SelectItem key={team.id} value={team.id}>{team.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="first_name">First Name</Label>
+              <Input
+                id="first_name"
+                {...register('first_name')}
+                placeholder="Enter first name"
               />
-
-              <FormField
-                control={form.control}
-                name="jerseyNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Jersey Number (Optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="7" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {errors.first_name && (
+                <p className="text-sm text-red-500">{errors.first_name.message}</p>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="battingStyle"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Batting Style (Optional)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select style" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {battingStyles.map((style) => (
-                          <SelectItem key={style.value} value={style.value}>{style.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+            <div className="space-y-2">
+              <Label htmlFor="last_name">Last Name</Label>
+              <Input
+                id="last_name"
+                {...register('last_name')}
+                placeholder="Enter last name"
               />
-
-              <FormField
-                control={form.control}
-                name="bowlingStyle"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Bowling Style (Optional)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select style" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {bowlingStyles.map((style) => (
-                          <SelectItem key={style.value} value={style.value}>{style.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              {errors.last_name && (
+                <p className="text-sm text-red-500">{errors.last_name.message}</p>
+              )}
             </div>
+          </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancel
-              </Button>
-              <Button type="submit">Create Player</Button>
-            </DialogFooter>
-          </form>
-        </Form>
+          <div className="space-y-2">
+            <Label htmlFor="player_type">Player Type</Label>
+            <Select
+              value={playerType}
+              onValueChange={(value) => setValue('player_type', value as any)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select player type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="batter">Batter</SelectItem>
+                <SelectItem value="bowler">Bowler</SelectItem>
+                <SelectItem value="all_rounder">All Rounder</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {(playerType === 'batter' || playerType === 'all_rounder') && (
+            <div className="space-y-2">
+              <Label htmlFor="batting_style">Batting Style</Label>
+              <Select
+                value={watch('batting_style')}
+                onValueChange={(value) => setValue('batting_style', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select batting style" />
+                </SelectTrigger>
+                <SelectContent>
+                  {battingStyles.map((style) => (
+                    <SelectItem key={style.value} value={style.value}>
+                      {style.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {(playerType === 'bowler' || playerType === 'all_rounder') && (
+            <div className="space-y-2">
+              <Label htmlFor="bowling_style">Bowling Style</Label>
+              <Select
+                value={watch('bowling_style')}
+                onValueChange={(value) => setValue('bowling_style', value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select bowling style" />
+                </SelectTrigger>
+                <SelectContent>
+                  {bowlingStyles.map((style) => (
+                    <SelectItem key={style.value} value={style.value}>
+                      {style.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="jersey_number">Jersey Number</Label>
+            <Input
+              id="jersey_number"
+              type="number"
+              {...register('jersey_number')}
+              placeholder="Enter jersey number"
+            />
+          </div>
+
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                reset();
+                setImageUrl(null);
+                setOpen(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                'Create Player'
+              )}
+            </Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

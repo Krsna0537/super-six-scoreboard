@@ -1,61 +1,96 @@
-
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { useAuthContext } from '@/contexts/AuthProvider';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader } from 'lucide-react';
-import ViewerDashboard from './dashboards/ViewerDashboard';
-import AdminDashboard from './dashboards/AdminDashboard';
+import { Button } from '@/components/ui/button';
 
-const Dashboard = () => {
-  const { user, loading: authLoading } = useAuthContext();
-  const navigate = useNavigate();
-  const [userRole, setUserRole] = useState<string | null>(null);
+export default function Dashboard() {
+  const [tournaments, setTournaments] = useState<any[]>([]);
+  const [selectedTournament, setSelectedTournament] = useState<string>('');
+  const [tournamentInfo, setTournamentInfo] = useState<any>(null);
+  const [matches, setMatches] = useState<any[]>([]);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  // Redirect to login if not authenticated
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/login');
-    }
-  }, [user, authLoading, navigate]);
+    // Fetch all tournaments
+    const fetchTournaments = async () => {
+      const { data } = await supabase.from('tournaments').select('id, name');
+      if (data) setTournaments(data);
+    };
+    fetchTournaments();
+  }, []);
 
-  // Fetch user profile to determine role
-  const { isLoading } = useQuery({
-    queryKey: ['user-role', user?.id],
-    queryFn: async () => {
-      if (!user?.id) return null;
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-      
-      if (error) {
-        console.error('Error fetching user role:', error);
-        return null;
-      }
-      
-      setUserRole(data?.role || 'viewer');
-      return data;
-    },
-    enabled: !!user?.id,
-  });
+  useEffect(() => {
+    if (!selectedTournament) return;
+    setLoading(true);
+    // Fetch tournament info
+    supabase.from('tournaments').select('*').eq('id', selectedTournament).single().then(({ data }) => setTournamentInfo(data));
+    // Fetch matches
+    supabase.from('matches').select('*').eq('tournament_id', selectedTournament).order('match_date', { ascending: true }).then(({ data }) => setMatches(data || []));
+    // Fetch leaderboard (teams in tournament)
+    supabase.from('tournament_teams').select('team_id, teams(name)').eq('tournament_id', selectedTournament).then(({ data }) => setLeaderboard(data || []));
+    setLoading(false);
+  }, [selectedTournament]);
 
-  if (authLoading || isLoading || !userRole) {
-    return (
-      <div className="flex justify-center items-center h-[70vh]">
-        <Loader className="animate-spin h-8 w-8" />
+  return (
+    <div className="container mx-auto py-8 px-4">
+      <h1 className="text-3xl font-bold mb-8">Dashboard</h1>
+      <div className="mb-8">
+        <label htmlFor="tournament-select" className="block mb-2 font-medium">Select Tournament</label>
+        <select
+          id="tournament-select"
+          className="cricket-input w-full max-w-md"
+          value={selectedTournament}
+          onChange={e => setSelectedTournament(e.target.value)}
+        >
+          <option value="">-- Choose a tournament --</option>
+          {tournaments.map(t => (
+            <option key={t.id} value={t.id}>{t.name}</option>
+          ))}
+        </select>
       </div>
-    );
-  }
-
-  // Render dashboard based on user role
-  if (userRole === 'admin') {
-    return <AdminDashboard />;
-  }
-
-  return <ViewerDashboard />;
-};
-
-export default Dashboard;
+      {selectedTournament && tournamentInfo && (
+        <div className="space-y-8">
+          <section className="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 className="text-2xl font-semibold mb-2">{tournamentInfo.name}</h2>
+            <p className="text-gray-600 mb-2">{tournamentInfo.location}</p>
+            <p className="text-gray-600 mb-2">{tournamentInfo.format} | {tournamentInfo.status}</p>
+            <p className="text-gray-600 mb-2">{new Date(tournamentInfo.start_date).toLocaleDateString()} - {new Date(tournamentInfo.end_date).toLocaleDateString()}</p>
+            <p className="text-gray-700">{tournamentInfo.description}</p>
+          </section>
+          <section className="bg-white rounded-lg shadow p-6 mb-6">
+            <h3 className="text-xl font-bold mb-4">Scheduled Matches</h3>
+            {matches.length === 0 ? (
+              <p className="text-gray-500">No matches scheduled for this tournament.</p>
+            ) : (
+              <ul className="divide-y">
+                {matches.map(match => (
+                  <li key={match.id} className="py-2 flex justify-between items-center">
+                    <span>{match.team1_id} vs {match.team2_id}</span>
+                    <span>{new Date(match.match_date).toLocaleDateString()}</span>
+                    <span className="text-sm text-gray-500">{match.venue}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+          <section className="bg-white rounded-lg shadow p-6 mb-6">
+            <h3 className="text-xl font-bold mb-4">Leaderboard / Teams</h3>
+            {leaderboard.length === 0 ? (
+              <p className="text-gray-500">No teams found for this tournament.</p>
+            ) : (
+              <ul className="divide-y">
+                {leaderboard.map((entry, idx) => (
+                  <li key={entry.team_id} className="py-2 flex items-center">
+                    <span className="font-medium mr-2">{idx + 1}.</span>
+                    <span>{entry.teams?.name || 'Team'}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+      )}
+      {loading && <div className="text-center py-8">Loading...</div>}
+    </div>
+  );
+}
