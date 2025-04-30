@@ -1,10 +1,15 @@
 
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader } from "lucide-react";
+import { Loader, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import CreateTeamDialog from "@/components/teams/CreateTeamDialog";
 
 const Teams = () => {
-  const { data: teams, isLoading } = useQuery({
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  
+  const { data: teams, isLoading, refetch } = useQuery({
     queryKey: ["teams"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -17,6 +22,10 @@ const Teams = () => {
     },
   });
 
+  const handleTeamCreated = () => {
+    refetch();
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
@@ -27,7 +36,17 @@ const Teams = () => {
 
   return (
     <div className="container mx-auto py-8">
-      <h1 className="text-3xl font-bold mb-8">Teams</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Teams</h1>
+        <Button 
+          onClick={() => setIsCreateDialogOpen(true)}
+          className="cricket-button-primary flex items-center gap-2"
+        >
+          <Plus size={18} />
+          Create Team
+        </Button>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {teams?.map((team) => (
           <div key={team.id} className="bg-white rounded-lg shadow-md overflow-hidden">
@@ -42,6 +61,12 @@ const Teams = () => {
           </div>
         ))}
       </div>
+
+      <CreateTeamDialog 
+        open={isCreateDialogOpen} 
+        onOpenChange={setIsCreateDialogOpen}
+        onTeamCreated={handleTeamCreated}
+      />
     </div>
   );
 };

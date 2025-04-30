@@ -3,6 +3,9 @@ import React, { useState } from 'react';
 import TournamentsList from '@/components/tournaments/TournamentsList';
 import TournamentFilters from '@/components/tournaments/TournamentFilters';
 import { TournamentCardProps } from '@/components/tournaments/TournamentCard';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import CreateTournamentDialog from '@/components/tournaments/CreateTournamentDialog';
 
 // Mock data for tournaments
 const mockTournaments: TournamentCardProps[] = [
@@ -71,6 +74,7 @@ const mockTournaments: TournamentCardProps[] = [
 const Tournaments = () => {
   const [tournaments, setTournaments] = useState<TournamentCardProps[]>(mockTournaments);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 
   const handleFilter = (filters: any) => {
     setIsLoading(true);
@@ -102,11 +106,25 @@ const Tournaments = () => {
   return (
     <div className="py-12 bg-gray-50">
       <div className="cricket-container">
-        <h1 className="cricket-heading-1 mb-8">Tournaments</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="cricket-heading-1">Tournaments</h1>
+          <Button 
+            onClick={() => setIsCreateDialogOpen(true)}
+            className="cricket-button-primary flex items-center gap-2"
+          >
+            <Plus size={18} />
+            Create Tournament
+          </Button>
+        </div>
         
         <TournamentFilters onFilter={handleFilter} />
         
         <TournamentsList tournaments={tournaments} isLoading={isLoading} />
+
+        <CreateTournamentDialog 
+          open={isCreateDialogOpen}
+          onOpenChange={setIsCreateDialogOpen}
+        />
       </div>
     </div>
   );
