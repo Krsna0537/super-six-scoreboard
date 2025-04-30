@@ -3,13 +3,11 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import AdminCreator from '@/components/admin/AdminCreator';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showAdminCreator, setShowAdminCreator] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -123,21 +121,6 @@ const Login = () => {
             </button>
           </div>
         </form>
-        
-        <div className="mt-6">
-          <button 
-            onClick={() => setShowAdminCreator(!showAdminCreator)} 
-            className="text-sm text-gray-500 hover:text-gray-700 block mx-auto"
-          >
-            {showAdminCreator ? "Hide Admin Setup" : "Setup Admin Account"}
-          </button>
-          
-          {showAdminCreator && (
-            <div className="mt-4">
-              <AdminCreator />
-            </div>
-          )}
-        </div>
         
         <div className="mt-6">
           <div className="relative">
