@@ -1,3 +1,4 @@
+
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 // This is an edge function that creates an admin user
@@ -11,19 +12,17 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
-    // Get the request body
-    const { email, password, first_name, last_name } = await req.json()
-
-    if (!email || !password || !first_name || !last_name) {
-      return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
-      )
-    }
+    // Default admin credentials
+    const defaultCredentials = {
+      email: 'admin@pro2.com',
+      password: 'Krsna@18',
+      first_name: 'Admin',
+      last_name: 'User'
+    };
 
     // Check if user already exists
     const { data: existingUser } = await supabaseAdmin.auth.admin.listUsers()
-    const userExists = existingUser?.users?.some(user => user.email === email)
+    const userExists = existingUser?.users?.some(user => user.email === defaultCredentials.email)
 
     if (userExists) {
       return new Response(
@@ -34,12 +33,12 @@ Deno.serve(async (req) => {
 
     // Create the user
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      password,
+      email: defaultCredentials.email,
+      password: defaultCredentials.password,
       email_confirm: true,
       user_metadata: {
-        first_name,
-        last_name
+        first_name: defaultCredentials.first_name,
+        last_name: defaultCredentials.last_name
       }
     })
 
