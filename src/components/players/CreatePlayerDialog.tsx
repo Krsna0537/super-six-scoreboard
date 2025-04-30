@@ -78,8 +78,11 @@ const CreatePlayerDialog: React.FC<CreatePlayerDialogProps> = ({
 
   const onSubmit = async (data: FormValues) => {
     try {
-      // First create a profile
+      // First create a profile - Fix: Generate UUID on client side to assign as ID
+      const profileId = crypto.randomUUID();
+      
       const { data: profileData, error: profileError } = await supabase.from('profiles').insert({
+        id: profileId,
         first_name: data.firstName,
         last_name: data.lastName,
         role: 'player',
@@ -89,7 +92,7 @@ const CreatePlayerDialog: React.FC<CreatePlayerDialogProps> = ({
       
       // Then create the player with the profile id
       const { error: playerError } = await supabase.from('players').insert({
-        profile_id: profileData.id,
+        profile_id: profileId, // Use the same ID we generated
         team_id: data.teamId || null,
         jersey_number: data.jerseyNumber || null,
         batting_style: data.battingStyle || null,

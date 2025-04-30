@@ -54,9 +54,14 @@ type FormValues = z.infer<typeof formSchema>;
 interface CreateTournamentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onTournamentCreated?: () => void;
 }
 
-const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({ open, onOpenChange }) => {
+const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({ 
+  open, 
+  onOpenChange, 
+  onTournamentCreated 
+}) => {
   const { toast } = useToast();
   
   const form = useForm<FormValues>({
@@ -71,12 +76,13 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({ open, o
 
   const onSubmit = async (data: FormValues) => {
     try {
+      // Fix: Insert tournament as a single object, not an array
       const { error } = await supabase.from('tournaments').insert({
         name: data.name,
         location: data.location,
         format: data.format,
-        start_date: data.startDate,
-        end_date: data.endDate,
+        start_date: data.startDate.toISOString(),
+        end_date: data.endDate.toISOString(),
         status: data.status,
       });
 
@@ -89,6 +95,7 @@ const CreateTournamentDialog: React.FC<CreateTournamentDialogProps> = ({ open, o
       
       onOpenChange(false);
       form.reset();
+      if (onTournamentCreated) onTournamentCreated();
     } catch (error: any) {
       toast({
         title: 'Error',
