@@ -6,6 +6,18 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 Deno.serve(async (req) => {
   try {
+    // Add CORS headers for browser compatibility
+    const corsHeaders = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+      'Content-Type': 'application/json'
+    };
+    
+    // Handle CORS preflight requests
+    if (req.method === 'OPTIONS') {
+      return new Response(null, { headers: corsHeaders, status: 204 });
+    }
+
     // Create a Supabase client with the service role key
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -27,7 +39,7 @@ Deno.serve(async (req) => {
     if (userExists) {
       return new Response(
         JSON.stringify({ error: 'User already exists' }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: corsHeaders }
       )
     }
 
@@ -45,7 +57,7 @@ Deno.serve(async (req) => {
     if (error) {
       return new Response(
         JSON.stringify({ error: error.message }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: corsHeaders }
       )
     }
 
@@ -58,18 +70,29 @@ Deno.serve(async (req) => {
     if (profileError) {
       return new Response(
         JSON.stringify({ error: profileError.message }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+        { status: 400, headers: corsHeaders }
       )
     }
 
+    console.log("Admin user created successfully:", data.user.id);
+
     return new Response(
       JSON.stringify({ message: 'Admin user created successfully' }),
-      { status: 200, headers: { 'Content-Type': 'application/json' } }
+      { status: 200, headers: corsHeaders }
     )
   } catch (error) {
+    console.error("Error creating admin user:", error);
+    
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { 
+        status: 500, 
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+          'Content-Type': 'application/json'
+        } 
+      }
     )
   }
 })
