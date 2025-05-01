@@ -162,9 +162,13 @@ export type Database = {
           batting_style: string | null
           bowling_style: string | null
           created_at: string | null
+          first_name: string | null
           id: string
+          image_url: string | null
           jersey_number: number | null
-          profile_id: string
+          last_name: string | null
+          player_type: Database["public"]["Enums"]["player_type_enum"] | null
+          profile_id: string | null
           team_id: string | null
           updated_at: string | null
         }
@@ -172,9 +176,13 @@ export type Database = {
           batting_style?: string | null
           bowling_style?: string | null
           created_at?: string | null
+          first_name?: string | null
           id?: string
+          image_url?: string | null
           jersey_number?: number | null
-          profile_id: string
+          last_name?: string | null
+          player_type?: Database["public"]["Enums"]["player_type_enum"] | null
+          profile_id?: string | null
           team_id?: string | null
           updated_at?: string | null
         }
@@ -182,9 +190,13 @@ export type Database = {
           batting_style?: string | null
           bowling_style?: string | null
           created_at?: string | null
+          first_name?: string | null
           id?: string
+          image_url?: string | null
           jersey_number?: number | null
-          profile_id?: string
+          last_name?: string | null
+          player_type?: Database["public"]["Enums"]["player_type_enum"] | null
+          profile_id?: string | null
           team_id?: string | null
           updated_at?: string | null
         }
@@ -211,6 +223,7 @@ export type Database = {
           created_at: string | null
           first_name: string | null
           id: string
+          is_admin: boolean | null
           last_name: string | null
           role: string | null
           updated_at: string | null
@@ -220,6 +233,7 @@ export type Database = {
           created_at?: string | null
           first_name?: string | null
           id: string
+          is_admin?: boolean | null
           last_name?: string | null
           role?: string | null
           updated_at?: string | null
@@ -229,6 +243,7 @@ export type Database = {
           created_at?: string | null
           first_name?: string | null
           id?: string
+          is_admin?: boolean | null
           last_name?: string | null
           role?: string | null
           updated_at?: string | null
@@ -272,27 +287,31 @@ export type Database = {
       }
       tournament_teams: {
         Row: {
+          created_at: string | null
           id: string
-          tournament_id: string
-          team_id: string
-          created_at: string
-          updated_at: string
+          team_id: string | null
+          tournament_id: string | null
         }
         Insert: {
+          created_at?: string | null
           id?: string
-          tournament_id: string
-          team_id: string
-          created_at?: string
-          updated_at?: string
+          team_id?: string | null
+          tournament_id?: string | null
         }
         Update: {
+          created_at?: string | null
           id?: string
-          tournament_id?: string
-          team_id?: string
-          created_at?: string
-          updated_at?: string
+          team_id?: string | null
+          tournament_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "tournament_teams_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tournament_teams_tournament_id_fkey"
             columns: ["tournament_id"]
@@ -300,13 +319,6 @@ export type Database = {
             referencedRelation: "tournaments"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "tournament_teams_team_id_fkey"
-            columns: ["team_id"]
-            isOneToOne: false
-            referencedRelation: "teams"
-            referencedColumns: ["id"]
-          }
         ]
       }
       tournaments: {
@@ -315,39 +327,36 @@ export type Database = {
           end_date: string
           format: string
           id: string
+          image: string | null
           location: string | null
           name: string
           start_date: string
           status: string
           updated_at: string | null
-          image: string | null
-          description: string | null
         }
         Insert: {
           created_at?: string | null
           end_date: string
           format: string
           id?: string
+          image?: string | null
           location?: string | null
           name: string
           start_date: string
           status?: string
           updated_at?: string | null
-          image?: string | null
-          description?: string | null
         }
         Update: {
           created_at?: string | null
           end_date?: string
           format?: string
           id?: string
+          image?: string | null
           location?: string | null
           name?: string
           start_date?: string
           status?: string
           updated_at?: string | null
-          image?: string | null
-          description?: string | null
         }
         Relationships: []
       }
@@ -359,7 +368,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      player_type_enum: "batter" | "bowler" | "all_rounder"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -474,18 +483,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      player_type_enum: ["batter", "bowler", "all_rounder"],
+    },
   },
 } as const
-
-export type Team = {
-  id: string;
-  name: string;
-  logo_url: string | null;
-  description: string | null;
-  captain_id: string | null;
-  vice_captain_id: string | null;
-  wicket_keeper_id: string | null;
-  created_at: string;
-  updated_at: string;
-};

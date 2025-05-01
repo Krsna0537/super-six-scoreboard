@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -61,6 +62,7 @@ const TeamEdit = () => {
         setPlayers(teamPlayersData || []);
         setSelectedPlayers(teamPlayersData?.map(p => p.id) || []);
       } catch (error: any) {
+        console.error("Error fetching data:", error.message);
         navigate('/teams');
       } finally {
         setLoading(false);
@@ -114,6 +116,7 @@ const TeamEdit = () => {
 
       navigate('/teams');
     } catch (error: any) {
+      console.error("Error saving data:", error.message);
       navigate('/teams');
     } finally {
       setSaving(false);
@@ -135,6 +138,19 @@ const TeamEdit = () => {
       </div>
     );
   }
+
+  // Safe getter for player name with fallbacks
+  const getPlayerInitials = (player: any) => {
+    if (!player || !player.profiles) return "??";
+    const firstName = player.profiles.first_name || "";
+    const lastName = player.profiles.last_name || "";
+    return (firstName[0] || "") + (lastName[0] || "");
+  };
+
+  const getPlayerFullName = (player: any) => {
+    if (!player || !player.profiles) return "Unknown Player";
+    return `${player.profiles.first_name || ""} ${player.profiles.last_name || ""}`.trim() || "Unknown Player";
+  };
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -202,7 +218,7 @@ const TeamEdit = () => {
                     <SelectContent>
                       {players.map((player) => (
                         <SelectItem key={player.id} value={player.id}>
-                          {player.profiles.first_name} {player.profiles.last_name}
+                          {getPlayerFullName(player)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -218,7 +234,7 @@ const TeamEdit = () => {
                     <SelectContent>
                       {players.map((player) => (
                         <SelectItem key={player.id} value={player.id}>
-                          {player.profiles.first_name} {player.profiles.last_name}
+                          {getPlayerFullName(player)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -234,7 +250,7 @@ const TeamEdit = () => {
                     <SelectContent>
                       {players.map((player) => (
                         <SelectItem key={player.id} value={player.id}>
-                          {player.profiles.first_name} {player.profiles.last_name}
+                          {getPlayerFullName(player)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -290,12 +306,12 @@ const TeamEdit = () => {
                             <div className="flex items-center gap-3">
                               <Avatar>
                                 <AvatarFallback>
-                                  {player.profiles.first_name[0]}{player.profiles.last_name[0]}
+                                  {getPlayerInitials(player)}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
                                 <p className="font-medium">
-                                  {player.profiles.first_name} {player.profiles.last_name}
+                                  {getPlayerFullName(player)}
                                 </p>
                               </div>
                             </div>
@@ -320,12 +336,12 @@ const TeamEdit = () => {
                     <div className="flex items-center gap-3">
                       <Avatar>
                         <AvatarFallback>
-                          {player.profiles.first_name[0]}{player.profiles.last_name[0]}
+                          {getPlayerInitials(player)}
                         </AvatarFallback>
                       </Avatar>
                       <div>
                         <p className="font-medium">
-                          {player.profiles.first_name} {player.profiles.last_name}
+                          {getPlayerFullName(player)}
                         </p>
                         <div className="flex gap-2 mt-1">
                           {player.id === captain && <Badge variant="secondary">Captain</Badge>}
@@ -345,4 +361,4 @@ const TeamEdit = () => {
   );
 };
 
-export default TeamEdit; 
+export default TeamEdit;
