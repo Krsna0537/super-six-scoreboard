@@ -3,32 +3,14 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Loader, Save, ArrowLeft, Users } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import { Loader, Save, ArrowLeft } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Checkbox } from '@/components/ui/checkbox';
-
-// Updated team interface to match what's available in the database
-interface Team {
-  id: string;
-  name: string;
-  logo_url: string | null;
-  created_at: string | null;
-  updated_at: string | null;
-  captain_id: string | null;
-  // These fields might not exist in the database yet, so we mark them as optional
-  vice_captain_id?: string | null;
-  wicket_keeper_id?: string | null;
-  description?: string | null;
-}
+import TeamDetailsForm from '@/components/teams/TeamDetailsForm';
+import PlayersList from '@/components/teams/PlayersList';
+import SelectPlayersDialog from '@/components/teams/SelectPlayersDialog';
+import { Team, Player } from '@/types/team';
+import { getPlayerFullName } from '@/utils/playerUtils';
 
 const TeamEdit = () => {
   const { id } = useParams();
@@ -36,8 +18,8 @@ const TeamEdit = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [team, setTeam] = useState<Team | null>(null);
-  const [players, setPlayers] = useState<any[]>([]);
-  const [allPlayers, setAllPlayers] = useState<any[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [allPlayers, setAllPlayers] = useState<Player[]>([]);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [isSelectPlayersOpen, setIsSelectPlayersOpen] = useState(false);
   const [captain, setCaptain] = useState<string | null>(null);
@@ -155,19 +137,6 @@ const TeamEdit = () => {
     }
   };
 
-  // Safe getter for player name with fallbacks
-  const getPlayerInitials = (player: any) => {
-    if (!player || !player.profiles) return "??";
-    const firstName = player.profiles.first_name || "";
-    const lastName = player.profiles.last_name || "";
-    return (firstName[0] || "") + (lastName[0] || "");
-  };
-
-  const getPlayerFullName = (player: any) => {
-    if (!player || !player.profiles) return "Unknown Player";
-    return `${player.profiles.first_name || ""} ${player.profiles.last_name || ""}`.trim() || "Unknown Player";
-  };
-
   const handlePlayerSelect = (playerId: string) => {
     setSelectedPlayers(prev => 
       prev.includes(playerId)
@@ -210,89 +179,18 @@ const TeamEdit = () => {
               <CardTitle>Team Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-24 w-24">
-                  <AvatarImage src={team.logo_url || undefined} />
-                  <AvatarFallback>{team.name.slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div className="space-y-2">
-                  <Label>Team Logo URL</Label>
-                  <Input
-                    value={team.logo_url || ''}
-                    onChange={(e) => setTeam({ ...team, logo_url: e.target.value })}
-                    placeholder="Enter logo URL"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Team Name</Label>
-                <Input
-                  value={team.name}
-                  onChange={(e) => setTeam({ ...team, name: e.target.value })}
-                  placeholder="Enter team name"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>Description</Label>
-                <Textarea
-                  value={team.description || ''}
-                  onChange={(e) => setTeam({ ...team, description: e.target.value })}
-                  placeholder="Enter team description"
-                  rows={4}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label>Captain</Label>
-                  <Select value={captain || ''} onValueChange={setCaptain}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select captain" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {players.map((player) => (
-                        <SelectItem key={player.id} value={player.id}>
-                          {getPlayerFullName(player)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Vice Captain</Label>
-                  <Select value={viceCaptain || ''} onValueChange={setViceCaptain}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select vice captain" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {players.map((player) => (
-                        <SelectItem key={player.id} value={player.id}>
-                          {getPlayerFullName(player)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Wicket Keeper</Label>
-                  <Select value={wicketKeeper || ''} onValueChange={setWicketKeeper}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select wicket keeper" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {players.map((player) => (
-                        <SelectItem key={player.id} value={player.id}>
-                          {getPlayerFullName(player)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              <TeamDetailsForm
+                team={team}
+                setTeam={setTeam}
+                players={players}
+                captain={captain}
+                setCaptain={setCaptain}
+                viceCaptain={viceCaptain}
+                setViceCaptain={setViceCaptain}
+                wicketKeeper={wicketKeeper}
+                setWicketKeeper={setWicketKeeper}
+                getPlayerFullName={getPlayerFullName}
+              />
 
               <div className="flex justify-end">
                 <Button onClick={handleSave} disabled={saving}>
@@ -318,81 +216,26 @@ const TeamEdit = () => {
             <CardHeader>
               <CardTitle>Team Players</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Current Players</h3>
-                <Dialog open={isSelectPlayersOpen} onOpenChange={setIsSelectPlayersOpen}>
-                  <DialogTrigger asChild>
-                    <Button>
-                      <Users className="mr-2 h-4 w-4" />
-                      Select Players
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                      <DialogTitle>Select Players</DialogTitle>
-                    </DialogHeader>
-                    <ScrollArea className="h-[400px] pr-4">
-                      <div className="space-y-4">
-                        {allPlayers.map((player) => (
-                          <div
-                            key={player.id}
-                            className="flex items-center justify-between p-4 border rounded-lg"
-                          >
-                            <div className="flex items-center gap-3">
-                              <Avatar>
-                                <AvatarFallback>
-                                  {getPlayerInitials(player)}
-                                </AvatarFallback>
-                              </Avatar>
-                              <div>
-                                <p className="font-medium">
-                                  {getPlayerFullName(player)}
-                                </p>
-                              </div>
-                            </div>
-                            <Checkbox
-                              checked={selectedPlayers.includes(player.id)}
-                              onCheckedChange={() => handlePlayerSelect(player.id)}
-                            />
-                          </div>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </DialogContent>
-                </Dialog>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {players.map((player) => (
-                  <div
-                    key={player.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarFallback>
-                          {getPlayerInitials(player)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">
-                          {getPlayerFullName(player)}
-                        </p>
-                        <div className="flex gap-2 mt-1">
-                          {player.id === captain && <Badge variant="secondary">Captain</Badge>}
-                          {player.id === viceCaptain && <Badge variant="secondary">Vice Captain</Badge>}
-                          {player.id === wicketKeeper && <Badge variant="secondary">WK</Badge>}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <CardContent>
+              <PlayersList 
+                players={players}
+                captain={captain}
+                viceCaptain={viceCaptain}
+                wicketKeeper={wicketKeeper}
+                setIsSelectPlayersOpen={setIsSelectPlayersOpen}
+              />
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
+      <SelectPlayersDialog
+        open={isSelectPlayersOpen}
+        onOpenChange={setIsSelectPlayersOpen}
+        allPlayers={allPlayers}
+        selectedPlayers={selectedPlayers}
+        handlePlayerSelect={handlePlayerSelect}
+      />
     </div>
   );
 };
