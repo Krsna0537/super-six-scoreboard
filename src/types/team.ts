@@ -8,9 +8,9 @@ export interface Team {
   created_at: string | null;
   updated_at: string | null;
   captain_id: string | null;
-  vice_captain_id?: string | null;
-  wicket_keeper_id?: string | null;
-  description?: string | null;
+  vice_captain_id: string | null;
+  wicket_keeper_id: string | null;
+  description: string | null;
 }
 
 export interface Player {
