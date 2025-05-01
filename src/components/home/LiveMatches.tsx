@@ -1,9 +1,9 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useCricketAPI } from '../../hooks/useCricketAPI';
 
-// Mock data for live matches
-const liveMatches = [
+// Mock data for live matches as fallback
+const mockLiveMatches = [
   {
     id: 101,
     tournamentName: "Premier League 2025",
@@ -23,6 +23,58 @@ const liveMatches = [
 ];
 
 const LiveMatches = () => {
+  const { sportmonks } = useCricketAPI();
+  const [liveMatches, setLiveMatches] = useState(mockLiveMatches);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Function to fetch live matches
+    const fetchLiveMatches = async () => {
+      try {
+        setLoading(true);
+        const response = await sportmonks.getLiveMatches();
+        
+        // If we have API data, transform and use it
+        if (response && response.data && response.data.length > 0) {
+          const apiMatches = response.data.map((match: any) => ({
+            id: match.id,
+            tournamentName: match.league?.name || "T20 Match",
+            team1: { 
+              name: match.teams?.home?.name || "Home Team", 
+              logo: match.teams?.home?.image_path || "https://placehold.co/100/0EA5E9/FFFFFF?text=HT",
+              score: `${match.scores?.home?.score || 0}/${match.scores?.home?.wickets || 0}`,
+              overs: `${match.scores?.home?.overs || 0}`
+            },
+            team2: { 
+              name: match.teams?.away?.name || "Away Team", 
+              logo: match.teams?.away?.image_path || "https://placehold.co/100/10B981/FFFFFF?text=AT",
+              score: `${match.scores?.away?.score || 0}/${match.scores?.away?.wickets || 0}`,
+              overs: `${match.scores?.away?.overs || 0}`
+            },
+            status: "Live",
+            required: match.note || "Match in progress"
+          }));
+          setLiveMatches(apiMatches);
+        } else {
+          console.log("No live matches from API, using mock data");
+          // Keep using mock data if API returns no matches
+        }
+      } catch (error) {
+        console.error("Error fetching live matches:", error);
+        setError("Failed to fetch live match data. Using demo data instead.");
+        // Keep using mock data on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLiveMatches();
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchLiveMatches, 60000);
+    return () => clearInterval(interval);
+  }, [sportmonks]);
+
   return (
     <section className="py-12 bg-gray-50">
       <div className="cricket-container">
@@ -32,6 +84,12 @@ const LiveMatches = () => {
             View All Matches
           </Link>
         </div>
+        
+        {error && (
+          <div className="mb-4 p-2 bg-yellow-50 text-yellow-700 rounded">
+            {error}
+          </div>
+        )}
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {liveMatches.map((match) => (
