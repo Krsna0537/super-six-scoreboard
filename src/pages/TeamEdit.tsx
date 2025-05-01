@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,7 +16,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 
-// Extended team interface to include the missing fields
+// Updated team interface to match what's available in the database
 interface Team {
   id: string;
   name: string;
@@ -23,6 +24,7 @@ interface Team {
   created_at: string | null;
   updated_at: string | null;
   captain_id: string | null;
+  // These fields might not exist in the database yet, so we mark them as optional
   vice_captain_id?: string | null;
   wicket_keeper_id?: string | null;
   description?: string | null;
