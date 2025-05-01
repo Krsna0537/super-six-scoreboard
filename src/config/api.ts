@@ -1,7 +1,7 @@
 // API Configuration
 export const API_CONFIG = {
   sportmonks: {
-    apiKey: import.meta.env.VITE_SPORTMONKS_API_KEY || '',
+    apiKey: 'your_free_sportmonks_api_key_here', // Replace this with your actual API key
   },
   cricapi: {
     apiKey: import.meta.env.VITE_CRICAPI_API_KEY || '',
@@ -26,4 +26,4 @@ export const ENDPOINTS = {
       playerStats: '/playerStats',
     },
   },
-}; 
+};
