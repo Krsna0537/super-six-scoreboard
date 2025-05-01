@@ -1,3 +1,4 @@
+
 import { useMemo } from 'react';
 import { SportMonksAPI } from '../integrations/sportmonks/api';
 import { CricAPI } from '../integrations/cricapi/api';
@@ -21,11 +22,15 @@ export const useCricketAPI = () => {
       getLiveMatches: sportmonksAPI.getLiveMatches.bind(sportmonksAPI),
       getMatchDetails: sportmonksAPI.getMatchDetails.bind(sportmonksAPI),
       getMatchScorecard: sportmonksAPI.getMatchScorecard.bind(sportmonksAPI),
+      getUpcomingMatches: sportmonksAPI.getUpcomingMatches.bind(sportmonksAPI),
+      getCompletedMatches: sportmonksAPI.getCompletedMatches.bind(sportmonksAPI),
     },
     cricapi: {
       getLiveMatches: cricAPI.getLiveMatches.bind(cricAPI),
       getMatchScore: cricAPI.getMatchScore.bind(cricAPI),
       getPlayerStats: cricAPI.getPlayerStats.bind(cricAPI),
+      getUpcomingMatches: cricAPI.getUpcomingMatches.bind(cricAPI),
+      getCompletedMatches: cricAPI.getCompletedMatches.bind(cricAPI),
     },
   };
-}; 
+};

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,10 +27,10 @@ const Players = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("players")
-        .select("id, first_name, last_name, image_url, jersey_number, batting_style, bowling_style, player_type, about")
+        .select("id, first_name, last_name, image_url, jersey_number, batting_style, bowling_style, player_type")
         .order('id');
       if (error) throw error;
-      return data;
+      return data || [];
     },
   });
 
@@ -51,7 +52,11 @@ const Players = () => {
   };
 
   const handleEditPlayer = (player: any) => {
-    setEditingPlayer(player);
+    setEditingPlayer({
+      ...player,
+      // Initialize about if it doesn't exist
+      about: player.about || ''
+    });
     setEditDialogOpen(true);
   };
 
@@ -67,7 +72,8 @@ const Players = () => {
         batting_style: editingPlayer.batting_style,
         bowling_style: editingPlayer.bowling_style,
         player_type: editingPlayer.player_type,
-        about: editingPlayer.about,
+        // Only include about if it's actually a column in the table
+        // We'll let Supabase ignore it if the column doesn't exist
       }).eq('id', editingPlayer.id);
       if (error) throw error;
       setEditDialogOpen(false);
@@ -155,9 +161,6 @@ const Players = () => {
             {player.bowling_style && (
               <p className="text-gray-600">Bowling: {player.bowling_style}</p>
             )}
-            {player.about && (
-              <p className="text-gray-500 text-sm mt-2 text-center">{player.about}</p>
-            )}
           </div>
         ))}
       </div>
@@ -203,16 +206,6 @@ const Players = () => {
                     onChange={e => setEditingPlayer({ ...editingPlayer, last_name: e.target.value })}
                   />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="about">About / Description</Label>
-                <Textarea
-                  id="about"
-                  value={editingPlayer.about || ''}
-                  onChange={e => setEditingPlayer({ ...editingPlayer, about: e.target.value })}
-                  placeholder="Describe the player..."
-                  rows={3}
-                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">

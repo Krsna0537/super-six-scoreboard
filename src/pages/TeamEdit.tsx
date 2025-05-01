@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,12 +15,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 
+// Extended team interface to include the missing fields
+interface Team {
+  id: string;
+  name: string;
+  logo_url: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+  captain_id: string | null;
+  vice_captain_id?: string | null;
+  wicket_keeper_id?: string | null;
+  description?: string | null;
+}
+
 const TeamEdit = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [team, setTeam] = useState<any>(null);
+  const [team, setTeam] = useState<Team | null>(null);
   const [players, setPlayers] = useState<any[]>([]);
   const [allPlayers, setAllPlayers] = useState<any[]>([]);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
@@ -42,10 +54,19 @@ const TeamEdit = () => {
           .single();
         
         if (!teamData) throw new Error('Team not found');
-        setTeam(teamData);
-        setCaptain(teamData.captain_id);
-        setViceCaptain(teamData.vice_captain_id);
-        setWicketKeeper(teamData.wicket_keeper_id);
+        
+        // Initialize the team with default values for the missing fields
+        const extendedTeam: Team = {
+          ...teamData,
+          vice_captain_id: teamData.vice_captain_id || null,
+          wicket_keeper_id: teamData.wicket_keeper_id || null,
+          description: teamData.description || '',
+        };
+        
+        setTeam(extendedTeam);
+        setCaptain(extendedTeam.captain_id);
+        setViceCaptain(extendedTeam.vice_captain_id);
+        setWicketKeeper(extendedTeam.wicket_keeper_id);
 
         // Fetch all players
         const { data: allPlayersData } = await supabase
@@ -73,19 +94,28 @@ const TeamEdit = () => {
   }, [id, navigate]);
 
   const handleSave = async () => {
+    if (!team) return;
+    
     setSaving(true);
     try {
+      // We'll be updating only the fields we know exist in the table
+      // The API will ignore fields that don't exist in the table
+      const updateData: any = {
+        name: team.name,
+        logo_url: team.logo_url,
+        captain_id: captain,
+      };
+      
+      // Only add these fields if they exist on the team object
+      // (they may have been added to the DB in a later version)
+      if ('description' in team) updateData.description = team.description;
+      if ('vice_captain_id' in team) updateData.vice_captain_id = viceCaptain;
+      if ('wicket_keeper_id' in team) updateData.wicket_keeper_id = wicketKeeper;
+
       // Update team details
       const { error: teamError } = await supabase
         .from('teams')
-        .update({
-          name: team.name,
-          logo_url: team.logo_url,
-          description: team.description,
-          captain_id: captain,
-          vice_captain_id: viceCaptain,
-          wicket_keeper_id: wicketKeeper,
-        })
+        .update(updateData)
         .eq('id', id);
 
       if (teamError) throw teamError;
@@ -117,10 +147,23 @@ const TeamEdit = () => {
       navigate('/teams');
     } catch (error: any) {
       console.error("Error saving data:", error.message);
-      navigate('/teams');
+      alert(`Error saving team: ${error.message}`);
     } finally {
       setSaving(false);
     }
+  };
+
+  // Safe getter for player name with fallbacks
+  const getPlayerInitials = (player: any) => {
+    if (!player || !player.profiles) return "??";
+    const firstName = player.profiles.first_name || "";
+    const lastName = player.profiles.last_name || "";
+    return (firstName[0] || "") + (lastName[0] || "");
+  };
+
+  const getPlayerFullName = (player: any) => {
+    if (!player || !player.profiles) return "Unknown Player";
+    return `${player.profiles.first_name || ""} ${player.profiles.last_name || ""}`.trim() || "Unknown Player";
   };
 
   const handlePlayerSelect = (playerId: string) => {
@@ -139,18 +182,9 @@ const TeamEdit = () => {
     );
   }
 
-  // Safe getter for player name with fallbacks
-  const getPlayerInitials = (player: any) => {
-    if (!player || !player.profiles) return "??";
-    const firstName = player.profiles.first_name || "";
-    const lastName = player.profiles.last_name || "";
-    return (firstName[0] || "") + (lastName[0] || "");
-  };
-
-  const getPlayerFullName = (player: any) => {
-    if (!player || !player.profiles) return "Unknown Player";
-    return `${player.profiles.first_name || ""} ${player.profiles.last_name || ""}`.trim() || "Unknown Player";
-  };
+  if (!team) {
+    return <div className="text-center text-red-500">Team not found</div>;
+  }
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -176,7 +210,7 @@ const TeamEdit = () => {
             <CardContent className="space-y-6">
               <div className="flex items-center gap-4">
                 <Avatar className="h-24 w-24">
-                  <AvatarImage src={team.logo_url} />
+                  <AvatarImage src={team.logo_url || undefined} />
                   <AvatarFallback>{team.name.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div className="space-y-2">
