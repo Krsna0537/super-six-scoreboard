@@ -21,4 +21,3 @@ export interface Player {
     last_name: string | null;
   };
 }
-

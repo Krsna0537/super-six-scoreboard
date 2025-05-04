@@ -1,4 +1,3 @@
-
 import axios from 'axios';
 
 const CRICAPI_BASE_URL = 'https://cricapi.com/api';
@@ -17,9 +16,7 @@ export class CricAPI {
       baseURL: CRICAPI_BASE_URL,
       params: {
         apikey: this.apiKey
-      },
-      // Allow absolute URLs to be used in requests
-      allowAbsoluteUrls: true,
+      }
     });
   }
 

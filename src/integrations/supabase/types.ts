@@ -254,6 +254,7 @@ export type Database = {
         Row: {
           captain_id: string | null
           created_at: string | null
+          description: string | null
           id: string
           logo_url: string | null
           name: string
@@ -262,6 +263,7 @@ export type Database = {
         Insert: {
           captain_id?: string | null
           created_at?: string | null
+          description?: string | null
           id?: string
           logo_url?: string | null
           name: string
@@ -270,6 +272,7 @@ export type Database = {
         Update: {
           captain_id?: string | null
           created_at?: string | null
+          description?: string | null
           id?: string
           logo_url?: string | null
           name?: string
